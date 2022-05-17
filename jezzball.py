@@ -1,58 +1,105 @@
-import pygame as pg
-from pyparsing import White
+import sys
+import pygame
+
+
+
 
 class Ball:
-    def __init__(self):
-        self.BALL_HEIGHT = 30
-        self.BALL_LENGTH = 30
+    def __init__(self, screen, color, posX, posY, radius):
+        self.screen = screen
+        self.color = color
+        self.posX = posX
+        self.posY = posY
+        self.radius = radius
+        self.dx = 0
+        self.dy= 0
+        self.draw()
 
-class Wall:
-    def __init__(self):
-        pass
+    def draw(self):
+        pygame.draw.circle(self.screen, self.color, (self.posX, self.posY), self.radius)
 
-class Player:
-    def __init__(self):
-        self.life = 3     
+    def start_moving(self):
+        self.dx = 10
+        self.dy = 10
 
-class Menu:
-    def __init__(self):
-        pass
+    def move(self):
+        self.posX += self.dy
+        self.posY += self.dx
 
-class Jezzball:
-    def __init__(self, MENU, PLAYER, WALL, BALL_HEIGHT, BALL_LENGTH):
-        pg.display.set_caption("JezzBall")
-        self.WINDOW_HEIGHT, self.WINDOW_LENGTH = 1280, 800
-        self.WINDOW = pg.display.set_mode((self.WINDOW_HEIGHT, self.WINDOW_LENGTH))
-        self.MENU = MENU
-        self.PLAYER = PLAYER
-        self.WALL = WALL
-        self.BALL_HEIGHT = BALL_HEIGHT
-        self.BALL_LENGTH = BALL_LENGTH
-        self.BALL = pg.Rect(self.WINDOW_HEIGHT/2 - 15, self.WINDOW_LENGTH/2 - 15, self.BALL_HEIGHT, self.BALL_LENGTH)
-        self.WHITE = 255, 255, 255
+    def wall_collision(self):
+        self.dy = -self.dy + -self.dx
+        self.dx = -self.dx + -self.dy
 
-    
-    def draw_window(self):
-        self.WINDOW.fill(self.WHITE)
-        pg.display.update()
-        
+class CollisionManager:
+    def between_ball_wall(self, ball):
+        # Top
+        if ball.posY - ball.radius <= 0:
+            return True
 
-    def surfacel(self):
-        pass
+        # Bottom 
+        if ball.posY + ball.radius >= HEIGHT:
+            return True
 
-    def main(self):
-        self.RUN  = True
-        while self.RUN:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    self.RUN = False
-            self.draw_window()
+        # Top
+        if ball.posX + ball.radius <= 0:
+            return True
+
+        # Bottom 
+        if ball.posX - ball.radius >= WIDTH:
+            return True
+
+        return False
 
 
-if __name__ == "__main__":
-    ball = Ball()
-    wall = Wall()
-    player = Player()
-    menu = Menu()
-    jezzball = Jezzball(menu, player, wall, ball.BALL_HEIGHT, ball.BALL_LENGTH)
-    jezzball.main()
+WIDTH = 900
+HEIGHT = 500
+
+# COLOR
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen.fill(BLACK)
+pygame.display.set_caption("JeezBall")
+
+def paint_back():
+    screen.fill(BLACK)
+
+
+paint_back()
+
+# Objects 
+ball = Ball(screen, WHITE, WIDTH//2, HEIGHT//2, 10)
+collision = CollisionManager()
+
+
+playing = False
+FPS = 60
+clock = pygame.time.Clock()
+
+# Main loop
+while True:
+    clock.tick(FPS)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
+        # keyboard letter p to start the game 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                ball.start_moving()
+                playing = True
+
+        if playing:
+            paint_back()
+
+        # ball movement
+        ball.move()
+        ball.draw()
+
+
+        if collision.between_ball_wall(ball):
+            ball.wall_collision()
+
+
+
+    pygame.display.update()
